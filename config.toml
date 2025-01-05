@@ -1,2 +1,2 @@
-listen_address = 'localhost:8088'
-database_url = 'postgres://localhost/actix_test'
+listen_address = 'localhost:8080'
+database_url = 'postgres://postgres:K1so2022@localhost:5432/example_db'

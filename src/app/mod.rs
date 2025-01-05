@@ -8,4 +8,6 @@ pub mod route;
 
 pub mod models {
     pub mod user;
+    pub mod field_sectors;
+
 }

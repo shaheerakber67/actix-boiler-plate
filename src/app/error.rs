@@ -1,5 +1,7 @@
 use actix_web::{HttpResponseBuilder, ResponseError};
 use std::fmt::{Debug, Display, Formatter};
+use diesel::result::Error as DieselError;
+use serde::Serialize;
 
 #[derive(Debug)]
 pub struct AppError {
@@ -31,6 +33,13 @@ impl AppError {
         self.cause = Some(Box::new(cause));
         self
     }
+
+    // Convert from Diesel errors to AppError
+    pub fn from_diesel_error(error: DieselError) -> Self {
+        AppError::new(500)
+            .message("Database operation failed")
+            .cause(error)
+    }
 }
 
 impl Display for AppError {
@@ -39,7 +48,7 @@ impl Display for AppError {
             (Some(cause), Some(message)) => write!(f, "{}: {}", message, cause),
             (Some(cause), None) => write!(f, "{}", cause),
             (None, Some(message)) => write!(f, "{}", message),
-            (None, None) => write!(f, "{}", self.status_code().canonical_reason().unwrap()),
+            (None, None) => write!(f, "{}", self.status_code().canonical_reason().unwrap_or("Unknown error")),
         }
     }
 }
@@ -53,5 +62,12 @@ impl ResponseError for AppError {
         HttpResponseBuilder::new(self.status_code()).json(AppErrorBody {
             message: format!("{}", self),
         })
+    }
+}
+
+// Diesel error -> AppError conversion
+impl From<DieselError> for AppError {
+    fn from(error: DieselError) -> Self {
+        AppError::from_diesel_error(error)
     }
 }
